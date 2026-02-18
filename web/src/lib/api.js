@@ -47,14 +47,11 @@ export async function fetchPlaylistInfo(url) {
   return res.json();
 }
 
-export async function startPlaylistDownload(url) {
-  const res = await fetch(`${BASE}/download-playlist`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ url }),
-  });
-  if (!res.ok) throw await parseError(res, 'Failed to start playlist download');
-  return res.json();
+export async function startPlaylistDownload(entries) {
+  const results = await Promise.all(
+    entries.map((entry) => startDownload(entry.url))
+  );
+  return { jobIds: results.map((r) => r.jobId), count: results.length };
 }
 
 export async function fetchDownloads() {

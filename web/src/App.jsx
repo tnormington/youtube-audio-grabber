@@ -66,20 +66,21 @@ export default function App() {
     }
   }, []);
 
-  const handleDownloadPlaylist = useCallback(async (url) => {
+  const handleDownloadPlaylist = useCallback(async () => {
+    if (!playlistInfo?.entries?.length) return;
     setLoading(true);
     setError('');
     setEditingFile(null);
     setInitialMetadata(null);
     try {
-      const { jobIds: ids } = await startPlaylistDownload(url);
+      const { jobIds: ids } = await startPlaylistDownload(playlistInfo.entries);
       setJobIds(ids);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [playlistInfo]);
 
   const handleDownloadComplete = useCallback((event) => {
     if (event.filename) {

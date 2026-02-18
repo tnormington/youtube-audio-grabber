@@ -42,19 +42,6 @@ app.get('/api/playlist-info', async (req, res) => {
   }
 });
 
-// Start downloading all videos in a playlist
-app.post('/api/download-playlist', async (req, res) => {
-  const { url } = req.body;
-  if (!url) return res.status(400).json({ error: 'url is required in body' });
-  try {
-    const { entries } = await dm.getPlaylistEntries(url);
-    const jobIds = entries.map((entry) => dm.startDownload(entry.url));
-    res.json({ jobIds, count: jobIds.length });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
 // Start a download, returns jobId
 app.post('/api/download', (req, res) => {
   const { url } = req.body;

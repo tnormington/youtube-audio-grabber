@@ -88,7 +88,7 @@ export default function UrlInput({
           </div>
           <button
             className="btn-primary"
-            onClick={() => onDownloadPlaylist(url)}
+            onClick={() => onDownloadPlaylist()}
             disabled={loading}
           >
             Download All ({playlistInfo.entries.length} videos)
