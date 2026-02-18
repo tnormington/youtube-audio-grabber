@@ -3,14 +3,20 @@ import UrlInput from './components/UrlInput';
 import DownloadProgress from './components/DownloadProgress';
 import MetadataEditor from './components/MetadataEditor';
 import DownloadsList from './components/DownloadsList';
-import { fetchVideoInfo, startDownload } from './lib/api';
+import {
+  fetchVideoInfo,
+  startDownload,
+  fetchPlaylistInfo,
+  startPlaylistDownload,
+} from './lib/api';
 import './App.css';
 
 export default function App() {
   const [videoInfo, setVideoInfo] = useState(null);
+  const [playlistInfo, setPlaylistInfo] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [jobId, setJobId] = useState(null);
+  const [jobIds, setJobIds] = useState([]);
   const [editingFile, setEditingFile] = useState(null);
   const [initialMetadata, setInitialMetadata] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -19,9 +25,25 @@ export default function App() {
     setLoading(true);
     setError('');
     setVideoInfo(null);
+    setPlaylistInfo(null);
     try {
       const info = await fetchVideoInfo(url);
       setVideoInfo(info);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const handleFetchPlaylistInfo = useCallback(async (url) => {
+    setLoading(true);
+    setError('');
+    setVideoInfo(null);
+    setPlaylistInfo(null);
+    try {
+      const info = await fetchPlaylistInfo(url);
+      setPlaylistInfo(info);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -35,8 +57,23 @@ export default function App() {
     setEditingFile(null);
     setInitialMetadata(null);
     try {
-      const { jobId: id } = await startDownload(url);
-      setJobId(id);
+      const { jobId } = await startDownload(url);
+      setJobIds([jobId]);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const handleDownloadPlaylist = useCallback(async (url) => {
+    setLoading(true);
+    setError('');
+    setEditingFile(null);
+    setInitialMetadata(null);
+    try {
+      const { jobIds: ids } = await startPlaylistDownload(url);
+      setJobIds(ids);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -45,8 +82,10 @@ export default function App() {
   }, []);
 
   const handleDownloadComplete = useCallback((event) => {
-    setEditingFile(event.filename);
-    setInitialMetadata(event.metadata || null);
+    if (event.filename) {
+      setEditingFile(event.filename);
+      setInitialMetadata(event.metadata || null);
+    }
     setRefreshKey((k) => k + 1);
   }, []);
 
@@ -80,13 +119,16 @@ export default function App() {
 
         <UrlInput
           onFetchInfo={handleFetchInfo}
+          onFetchPlaylistInfo={handleFetchPlaylistInfo}
           onDownload={handleDownload}
+          onDownloadPlaylist={handleDownloadPlaylist}
           loading={loading}
           videoInfo={videoInfo}
+          playlistInfo={playlistInfo}
         />
 
         <DownloadProgress
-          jobId={jobId}
+          jobIds={jobIds}
           onComplete={handleDownloadComplete}
           onError={handleDownloadError}
         />
