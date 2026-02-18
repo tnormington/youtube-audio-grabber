@@ -41,6 +41,22 @@ export function subscribeProgress(jobId, onEvent) {
   return () => es.close();
 }
 
+export async function fetchPlaylistInfo(url) {
+  const res = await fetch(`${BASE}/playlist-info?url=${encodeURIComponent(url)}`);
+  if (!res.ok) throw await parseError(res, 'Failed to fetch playlist info');
+  return res.json();
+}
+
+export async function startPlaylistDownload(url) {
+  const res = await fetch(`${BASE}/download-playlist`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url }),
+  });
+  if (!res.ok) throw await parseError(res, 'Failed to start playlist download');
+  return res.json();
+}
+
 export async function fetchDownloads() {
   const res = await fetch(`${BASE}/downloads`);
   if (!res.ok) throw await parseError(res, 'Failed to fetch downloads');
