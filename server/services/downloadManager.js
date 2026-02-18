@@ -296,9 +296,10 @@ export class DownloadManager {
   }
 
   async searchYouTubeThumbnail(query) {
+    const isUrl = /^https?:\/\//.test(query);
     const output = await this._execYtDlp([
       '--dump-json', '--no-playlist', '--no-download',
-      `ytsearch1:${query}`,
+      isUrl ? query : `ytsearch1:${query}`,
     ]);
     const trimmed = output.trim();
     if (!trimmed) throw new Error('No YouTube results found for this search');

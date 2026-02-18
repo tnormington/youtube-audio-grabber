@@ -8,6 +8,7 @@ export default function MetadataEditor({ filename, initialMetadata, onSaved }) {
   const [artworkSrc, setArtworkSrc] = useState(null);
   const [uploadingArt, setUploadingArt] = useState(false);
   const [fetchingYT, setFetchingYT] = useState(false);
+  const [youtubeUrl, setYoutubeUrl] = useState('');
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -68,7 +69,7 @@ export default function MetadataEditor({ filename, initialMetadata, onSaved }) {
     setFetchingYT(true);
     setMessage('');
     try {
-      await fetchYouTubeArtwork(filename);
+      await fetchYouTubeArtwork(filename, youtubeUrl.trim() || undefined);
       setArtworkSrc(`${getArtworkUrl(filename)}?t=${Date.now()}`);
       setMessage('YouTube artwork fetched!');
     } catch (err) {
@@ -112,13 +113,23 @@ export default function MetadataEditor({ filename, initialMetadata, onSaved }) {
           >
             {uploadingArt ? 'Uploading...' : 'Upload Image'}
           </button>
-          <button
-            className="btn-secondary btn-small"
-            onClick={handleFetchYouTube}
-            disabled={fetchingYT || uploadingArt}
-          >
-            {fetchingYT ? 'Searching...' : 'Fetch from YouTube'}
-          </button>
+          <div className="yt-fetch-row">
+            <input
+              className="yt-url-input"
+              type="text"
+              placeholder="YouTube URL (optional)"
+              value={youtubeUrl}
+              onChange={(e) => setYoutubeUrl(e.target.value)}
+              disabled={fetchingYT}
+            />
+            <button
+              className="btn-secondary btn-small"
+              onClick={handleFetchYouTube}
+              disabled={fetchingYT || uploadingArt}
+            >
+              {fetchingYT ? 'Searching...' : 'Fetch'}
+            </button>
+          </div>
         </div>
       </div>
       <div className="form-grid">

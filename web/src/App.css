@@ -272,6 +272,18 @@ section h2 {
   gap: 0.5rem;
 }
 
+.yt-fetch-row {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.yt-url-input {
+  font-size: 0.82rem;
+  padding: 0.35rem 0.6rem;
+  width: 200px;
+}
+
 .btn-secondary {
   background: var(--surface-hover);
   border-color: var(--border);

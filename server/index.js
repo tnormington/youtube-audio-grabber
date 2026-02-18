@@ -119,10 +119,10 @@ app.post('/api/downloads/:filename/artwork', async (req, res) => {
   }
 });
 
-// Fetch artwork from YouTube by searching the filename
+// Fetch artwork from YouTube by URL or by searching the filename
 app.post('/api/downloads/:filename/artwork/youtube', async (req, res) => {
   try {
-    const query = req.params.filename.replace(/\.(m4a|mp3|webm)$/, '').replace(/[_-]/g, ' ');
+    const query = req.body?.url || req.params.filename.replace(/\.(m4a|mp3|webm)$/, '').replace(/[_-]/g, ' ');
     const imageBuffer = await dm.searchYouTubeThumbnail(query);
     await dm.embedArtwork(req.params.filename, imageBuffer);
     res.json({ success: true });

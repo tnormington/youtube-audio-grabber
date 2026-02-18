@@ -67,10 +67,13 @@ export function getArtworkUrl(filename) {
   return `${BASE}/downloads/${encodeURIComponent(filename)}/artwork`;
 }
 
-export async function fetchYouTubeArtwork(filename) {
-  const res = await fetch(`${BASE}/downloads/${encodeURIComponent(filename)}/artwork/youtube`, {
-    method: 'POST',
-  });
+export async function fetchYouTubeArtwork(filename, youtubeUrl) {
+  const options = { method: 'POST' };
+  if (youtubeUrl) {
+    options.headers = { 'Content-Type': 'application/json' };
+    options.body = JSON.stringify({ url: youtubeUrl });
+  }
+  const res = await fetch(`${BASE}/downloads/${encodeURIComponent(filename)}/artwork/youtube`, options);
   if (!res.ok) throw await parseError(res, 'Failed to fetch YouTube artwork');
   return res.json();
 }
