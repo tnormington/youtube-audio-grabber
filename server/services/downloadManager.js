@@ -349,17 +349,37 @@ export class DownloadManager {
       throw new Error('File not found');
     }
 
-    const tempImage = path.join(os.tmpdir(), `artwork-${randomUUID()}.jpg`);
+    const id = randomUUID();
+    const tempImageIn = path.join(os.tmpdir(), `artwork-in-${id}`);
+    const tempImageJpg = path.join(os.tmpdir(), `artwork-${id}.jpg`);
     const ext = path.extname(filename);
-    const tempOutput = path.join(os.tmpdir(), `output-${randomUUID()}${ext}`);
+    const tempOutput = path.join(os.tmpdir(), `output-${id}${ext}`);
 
     try {
-      await fs.writeFile(tempImage, imageBuffer);
+      await fs.writeFile(tempImageIn, imageBuffer);
+
+      // Convert image to JPEG so it's compatible with all containers (M4A/MP3)
+      await new Promise((resolve, reject) => {
+        const proc = spawn(FFMPEG_PATH, [
+          '-i', tempImageIn,
+          '-vf', 'scale=600:-1',
+          '-q:v', '2',
+          '-y', tempImageJpg,
+        ], { stdio: 'pipe' });
+
+        let stderr = '';
+        proc.stderr.on('data', (d) => (stderr += d.toString()));
+        proc.on('close', (code) => {
+          if (code === 0) resolve();
+          else reject(new Error(`FFmpeg image conversion failed: ${stderr}`));
+        });
+        proc.on('error', (err) => reject(err));
+      });
 
       await new Promise((resolve, reject) => {
         const proc = spawn(FFMPEG_PATH, [
           '-i', filePath,
-          '-i', tempImage,
+          '-i', tempImageJpg,
           '-map', '0:a',
           '-map', '1:v',
           '-c:a', 'copy',
@@ -379,7 +399,8 @@ export class DownloadManager {
 
       await fs.move(tempOutput, filePath, { overwrite: true });
     } finally {
-      await fs.remove(tempImage).catch(() => {});
+      await fs.remove(tempImageIn).catch(() => {});
+      await fs.remove(tempImageJpg).catch(() => {});
       await fs.remove(tempOutput).catch(() => {});
     }
   }
