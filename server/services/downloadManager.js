@@ -188,7 +188,7 @@ export class DownloadManager {
       try {
         entry.metadata = await this.readMetadata(file);
       } catch {
-        // metadata read may fail for some files, that's ok
+        // metadata read may fail for some files
       }
       results.push(entry);
     }
