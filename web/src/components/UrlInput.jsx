@@ -123,6 +123,11 @@ export default function UrlInput({
                 <span className="tag">{videoInfo.metadata.date}</span>
               )}
             </div>
+            {videoInfo.duplicateFilename && (
+              <div className="duplicate-warning">
+                Already downloaded as: {videoInfo.duplicateFilename}
+              </div>
+            )}
             <button className="btn-primary" onClick={() => onDownload(url)} disabled={loading}>
               Download Audio
             </button>

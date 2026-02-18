@@ -26,12 +26,25 @@ export class DownloadManager {
     const output = await this._execYtDlp(['--dump-json', '--no-playlist', cleanUrl]);
     const info = JSON.parse(output.trim());
     const parsed = this.metadataParser.parseVideoInfo(info);
+
+    // Check for existing file with same title
+    let duplicateFilename = null;
+    try {
+      const downloadDir = getDownloadDirectory();
+      const safeTitle = sanitizeFilename(info.title);
+      const files = await fs.readdir(downloadDir);
+      duplicateFilename = files.find((f) => f.startsWith(safeTitle)) || null;
+    } catch {
+      // downloads dir may not exist yet
+    }
+
     return {
       title: info.title,
       duration: info.duration,
       thumbnail: info.thumbnail,
       uploader: info.uploader,
       metadata: parsed,
+      duplicateFilename,
     };
   }
 
