@@ -82,7 +82,7 @@ export default function MetadataEditor({ filename, initialMetadata, onSaved }) {
 
   return (
     <section className="metadata-editor">
-      <h2>Edit Metadata</h2>
+      <h2>Edit Metadata — {filename}</h2>
       <div className="artwork-section">
         <div className="artwork-preview">
           {artworkSrc ? (
