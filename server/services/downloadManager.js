@@ -361,11 +361,11 @@ export class DownloadManager {
     try {
       await fs.writeFile(tempImageIn, imageBuffer);
 
-      // Convert image to JPEG so it's compatible with all containers (M4A/MP3)
+      // Convert to square JPEG with letterbox bars for container compatibility
       await new Promise((resolve, reject) => {
         const proc = spawn(FFMPEG_PATH, [
           '-i', tempImageIn,
-          '-vf', 'scale=600:-1',
+          '-vf', 'scale=600:600:force_original_aspect_ratio=decrease,pad=600:600:(ow-iw)/2:(oh-ih)/2:black',
           '-q:v', '2',
           '-y', tempImageJpg,
         ], { stdio: 'pipe' });

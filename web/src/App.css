@@ -252,7 +252,7 @@ section h2 {
 .artwork-preview img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .artwork-placeholder {
@@ -391,7 +391,7 @@ section h2 {
 .downloads-list .art-thumb {
   width: 36px;
   height: 36px;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: 4px;
   display: block;
 }
