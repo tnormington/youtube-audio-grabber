@@ -166,6 +166,18 @@ app.put('/api/metadata/:filename', async (req, res) => {
   }
 });
 
+// Write metadata (filename in body, avoids URL encoding issues)
+app.post('/api/save-metadata', async (req, res) => {
+  const { filename, ...metadata } = req.body;
+  if (!filename) return res.status(400).json({ error: 'filename is required' });
+  try {
+    await dm.writeMetadata(filename, metadata);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(err.message === 'File not found' ? 404 : 500).json({ error: err.message });
+  }
+});
+
 // SPA fallback — serve index.html for non-API routes in production
 app.get('/{*splat}', (_req, res) => {
   res.sendFile(path.join(webDist, 'index.html'));

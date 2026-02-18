@@ -77,10 +77,10 @@ export async function generateMetadata(filename) {
 }
 
 export async function saveMetadata(filename, metadata) {
-  const res = await fetch(`${BASE}/metadata/${encodeURIComponent(filename)}`, {
-    method: 'PUT',
+  const res = await fetch(`${BASE}/save-metadata`, {
+    method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(metadata),
+    body: JSON.stringify({ filename, ...metadata }),
   });
   if (!res.ok) throw await parseError(res, 'Failed to save metadata');
   return res.json();
