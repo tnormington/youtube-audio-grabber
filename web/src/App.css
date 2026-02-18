@@ -367,6 +367,23 @@ section h2 {
   animation: shimmer 1.5s infinite;
 }
 
+.downloads-list .art-col {
+  width: 40px;
+}
+
+.downloads-list .art-cell {
+  width: 40px;
+  padding: 0.25rem;
+}
+
+.downloads-list .art-thumb {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 4px;
+  display: block;
+}
+
 .downloads-list .filename-cell {
   max-width: 220px;
   overflow: hidden;
@@ -423,12 +440,12 @@ section h2 {
   }
 
   /* Hide less important columns on mobile */
-  .downloads-list th:nth-child(3),
-  .downloads-list td:nth-child(3),
   .downloads-list th:nth-child(4),
   .downloads-list td:nth-child(4),
   .downloads-list th:nth-child(5),
-  .downloads-list td:nth-child(5) {
+  .downloads-list td:nth-child(5),
+  .downloads-list th:nth-child(6),
+  .downloads-list td:nth-child(6) {
     display: none;
   }
 }

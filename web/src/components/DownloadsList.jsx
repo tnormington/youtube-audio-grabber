@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { fetchDownloads } from '../lib/api';
+import { fetchDownloads, getArtworkUrl } from '../lib/api';
 
 function formatSize(bytes) {
   if (bytes < 1024) return `${bytes} B`;
@@ -41,6 +41,7 @@ export default function DownloadsList({ refreshKey, onEdit }) {
         <table>
           <thead>
             <tr>
+              <th className="art-col"></th>
               <th>Filename</th>
               <th>Title</th>
               <th>Artist</th>
@@ -52,6 +53,14 @@ export default function DownloadsList({ refreshKey, onEdit }) {
           <tbody>
             {files.map((f) => (
               <tr key={f.filename}>
+                <td className="art-cell">
+                  <img
+                    src={getArtworkUrl(f.filename)}
+                    alt=""
+                    className="art-thumb"
+                    onError={(e) => { e.target.style.display = 'none'; }}
+                  />
+                </td>
                 <td className="filename-cell" title={f.filename}>{f.filename}</td>
                 <td className={`meta-cell ${f.metadata?.title ? '' : 'empty'}`}>
                   {f.metadata?.title || '--'}
