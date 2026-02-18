@@ -266,6 +266,12 @@ section h2 {
   font-style: italic;
 }
 
+.artwork-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
 .btn-secondary {
   background: var(--surface-hover);
   border-color: var(--border);

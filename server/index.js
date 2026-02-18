@@ -119,6 +119,18 @@ app.post('/api/downloads/:filename/artwork', async (req, res) => {
   }
 });
 
+// Fetch artwork from YouTube by searching the filename
+app.post('/api/downloads/:filename/artwork/youtube', async (req, res) => {
+  try {
+    const query = req.params.filename.replace(/\.(m4a|mp3|webm)$/, '').replace(/[_-]/g, ' ');
+    const imageBuffer = await dm.searchYouTubeThumbnail(query);
+    await dm.embedArtwork(req.params.filename, imageBuffer);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(err.message === 'File not found' ? 404 : 500).json({ error: err.message });
+  }
+});
+
 // Write metadata to an existing file
 app.put('/api/metadata/:filename', async (req, res) => {
   try {

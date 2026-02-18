@@ -58,6 +58,14 @@ export function getArtworkUrl(filename) {
   return `${BASE}/downloads/${encodeURIComponent(filename)}/artwork`;
 }
 
+export async function fetchYouTubeArtwork(filename) {
+  const res = await fetch(`${BASE}/downloads/${encodeURIComponent(filename)}/artwork/youtube`, {
+    method: 'POST',
+  });
+  if (!res.ok) throw new Error((await res.json()).error || 'Failed to fetch YouTube artwork');
+  return res.json();
+}
+
 export async function uploadArtwork(filename, file) {
   const base64 = await new Promise((resolve, reject) => {
     const reader = new FileReader();

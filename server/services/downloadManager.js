@@ -295,6 +295,18 @@ export class DownloadManager {
     await fs.move(tempPath, filePath, { overwrite: true });
   }
 
+  async searchYouTubeThumbnail(query) {
+    const output = await this._execYtDlp([
+      '--dump-json', '--no-playlist', '--no-download',
+      `ytsearch1:${query}`,
+    ]);
+    const info = JSON.parse(output.trim());
+    if (!info.thumbnail) throw new Error('No thumbnail found for this video');
+    const thumbRes = await fetch(info.thumbnail);
+    if (!thumbRes.ok) throw new Error('Failed to download YouTube thumbnail');
+    return Buffer.from(await thumbRes.arrayBuffer());
+  }
+
   async extractArtwork(filename) {
     const downloadDir = getDownloadDirectory();
     const filePath = path.join(downloadDir, filename);

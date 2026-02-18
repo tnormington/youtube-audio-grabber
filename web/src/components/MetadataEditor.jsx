@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { saveMetadata, fetchMetadata, getArtworkUrl, uploadArtwork } from '../lib/api';
+import { saveMetadata, fetchMetadata, getArtworkUrl, uploadArtwork, fetchYouTubeArtwork } from '../lib/api';
 
 export default function MetadataEditor({ filename, initialMetadata, onSaved }) {
   const [form, setForm] = useState({ title: '', artist: '', album: '', date: '' });
@@ -7,6 +7,7 @@ export default function MetadataEditor({ filename, initialMetadata, onSaved }) {
   const [message, setMessage] = useState('');
   const [artworkSrc, setArtworkSrc] = useState(null);
   const [uploadingArt, setUploadingArt] = useState(false);
+  const [fetchingYT, setFetchingYT] = useState(false);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -63,6 +64,20 @@ export default function MetadataEditor({ filename, initialMetadata, onSaved }) {
     }
   };
 
+  const handleFetchYouTube = async () => {
+    setFetchingYT(true);
+    setMessage('');
+    try {
+      await fetchYouTubeArtwork(filename);
+      setArtworkSrc(`${getArtworkUrl(filename)}?t=${Date.now()}`);
+      setMessage('YouTube artwork fetched!');
+    } catch (err) {
+      setMessage(`Error: ${err.message}`);
+    } finally {
+      setFetchingYT(false);
+    }
+  };
+
   if (!filename) return null;
 
   return (
@@ -82,20 +97,29 @@ export default function MetadataEditor({ filename, initialMetadata, onSaved }) {
             </div>
           )}
         </div>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          hidden
-          onChange={handleArtworkUpload}
-        />
-        <button
-          className="btn-secondary btn-small"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploadingArt}
-        >
-          {uploadingArt ? 'Uploading...' : 'Change Artwork'}
-        </button>
+        <div className="artwork-actions">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={handleArtworkUpload}
+          />
+          <button
+            className="btn-secondary btn-small"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploadingArt || fetchingYT}
+          >
+            {uploadingArt ? 'Uploading...' : 'Upload Image'}
+          </button>
+          <button
+            className="btn-secondary btn-small"
+            onClick={handleFetchYouTube}
+            disabled={fetchingYT || uploadingArt}
+          >
+            {fetchingYT ? 'Searching...' : 'Fetch from YouTube'}
+          </button>
+        </div>
       </div>
       <div className="form-grid">
         <label>
