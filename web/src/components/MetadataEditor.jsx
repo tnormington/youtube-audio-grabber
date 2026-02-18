@@ -1,10 +1,13 @@
-import { useState, useEffect } from 'react';
-import { saveMetadata, fetchMetadata } from '../lib/api';
+import { useState, useEffect, useRef } from 'react';
+import { saveMetadata, fetchMetadata, getArtworkUrl, uploadArtwork } from '../lib/api';
 
 export default function MetadataEditor({ filename, initialMetadata, onSaved }) {
   const [form, setForm] = useState({ title: '', artist: '', album: '', date: '' });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const [artworkSrc, setArtworkSrc] = useState(null);
+  const [uploadingArt, setUploadingArt] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (initialMetadata) {
@@ -16,6 +19,15 @@ export default function MetadataEditor({ filename, initialMetadata, onSaved }) {
         .catch((e) => setMessage(`Error loading metadata: ${e.message}`));
     }
   }, [filename, initialMetadata]);
+
+  // Load artwork preview whenever filename changes
+  useEffect(() => {
+    if (!filename) {
+      setArtworkSrc(null);
+      return;
+    }
+    setArtworkSrc(`${getArtworkUrl(filename)}?t=${Date.now()}`);
+  }, [filename]);
 
   const handleChange = (field) => (e) =>
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
@@ -34,11 +46,57 @@ export default function MetadataEditor({ filename, initialMetadata, onSaved }) {
     }
   };
 
+  const handleArtworkUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingArt(true);
+    setMessage('');
+    try {
+      await uploadArtwork(filename, file);
+      setArtworkSrc(`${getArtworkUrl(filename)}?t=${Date.now()}`);
+      setMessage('Artwork updated!');
+    } catch (err) {
+      setMessage(`Error: ${err.message}`);
+    } finally {
+      setUploadingArt(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
   if (!filename) return null;
 
   return (
     <section className="metadata-editor">
       <h2>Edit Metadata</h2>
+      <div className="artwork-section">
+        <div className="artwork-preview">
+          {artworkSrc ? (
+            <img
+              src={artworkSrc}
+              alt="Album artwork"
+              onError={() => setArtworkSrc(null)}
+            />
+          ) : (
+            <div className="artwork-placeholder">
+              <span>No Artwork</span>
+            </div>
+          )}
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={handleArtworkUpload}
+        />
+        <button
+          className="btn-secondary btn-small"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploadingArt}
+        >
+          {uploadingArt ? 'Uploading...' : 'Change Artwork'}
+        </button>
+      </div>
       <div className="form-grid">
         <label>
           Title

@@ -1,6 +1,7 @@
 import { spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs-extra';
+import os from 'os';
 import { randomUUID } from 'crypto';
 import { MetadataParser } from '../../src/metadataParser.js';
 import {
@@ -117,6 +118,20 @@ export class DownloadManager {
         : path.join(downloadDir, `${safeTitle}.m4a`);
 
       job.filename = path.basename(filePath);
+
+      // Auto-embed YouTube thumbnail as album artwork
+      if (info.thumbnail) {
+        try {
+          const thumbRes = await fetch(info.thumbnail);
+          if (thumbRes.ok) {
+            const thumbBuffer = Buffer.from(await thumbRes.arrayBuffer());
+            await this.embedArtwork(job.filename, thumbBuffer);
+          }
+        } catch (err) {
+          console.warn('Failed to embed thumbnail artwork:', err.message);
+        }
+      }
+
       job.status = 'complete';
       job.progress = 100;
       this._notify(job, {
@@ -256,6 +271,7 @@ export class DownloadManager {
 
     const ffmpegArgs = [
       '-i', filePath,
+      '-map', '0',
       '-c', 'copy',
       '-metadata', `title=${metadata.title || ''}`,
       '-metadata', `artist=${metadata.artist || ''}`,
@@ -277,6 +293,83 @@ export class DownloadManager {
     });
 
     await fs.move(tempPath, filePath, { overwrite: true });
+  }
+
+  async extractArtwork(filename) {
+    const downloadDir = getDownloadDirectory();
+    const filePath = path.join(downloadDir, filename);
+
+    if (!(await fs.pathExists(filePath))) {
+      throw new Error('File not found');
+    }
+
+    return new Promise((resolve) => {
+      const proc = spawn(FFMPEG_PATH, [
+        '-i', filePath,
+        '-an', '-vcodec', 'copy',
+        '-f', 'image2', 'pipe:1',
+      ], { stdio: ['pipe', 'pipe', 'pipe'] });
+
+      const chunks = [];
+      proc.stdout.on('data', (chunk) => chunks.push(chunk));
+      proc.on('close', (code) => {
+        if (code !== 0 || chunks.length === 0) {
+          resolve(null);
+          return;
+        }
+        const buffer = Buffer.concat(chunks);
+        // Detect content type from magic bytes
+        let contentType = 'image/jpeg';
+        if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47) {
+          contentType = 'image/png';
+        }
+        resolve({ buffer, contentType });
+      });
+      proc.on('error', () => resolve(null));
+    });
+  }
+
+  async embedArtwork(filename, imageBuffer) {
+    const downloadDir = getDownloadDirectory();
+    const filePath = path.join(downloadDir, filename);
+
+    if (!(await fs.pathExists(filePath))) {
+      throw new Error('File not found');
+    }
+
+    const tempImage = path.join(os.tmpdir(), `artwork-${randomUUID()}.jpg`);
+    const ext = path.extname(filename);
+    const tempOutput = path.join(os.tmpdir(), `output-${randomUUID()}${ext}`);
+
+    try {
+      await fs.writeFile(tempImage, imageBuffer);
+
+      await new Promise((resolve, reject) => {
+        const proc = spawn(FFMPEG_PATH, [
+          '-i', filePath,
+          '-i', tempImage,
+          '-map', '0:a',
+          '-map', '1:v',
+          '-c:a', 'copy',
+          '-c:v', 'copy',
+          '-disposition:v:0', 'attached_pic',
+          '-y', tempOutput,
+        ], { stdio: 'pipe' });
+
+        let stderr = '';
+        proc.stderr.on('data', (d) => (stderr += d.toString()));
+        proc.on('close', (code) => {
+          if (code === 0) resolve();
+          else reject(new Error(`FFmpeg artwork embed failed: ${stderr}`));
+        });
+        proc.on('error', (err) => reject(err));
+      });
+
+      await fs.move(tempOutput, filePath, { overwrite: true });
+    } finally {
+      await fs.remove(tempImage).catch(() => {});
+      await fs.remove(tempOutput).catch(() => {});
+    }
   }
 
   _execYtDlp(args) {

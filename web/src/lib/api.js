@@ -53,3 +53,23 @@ export async function saveMetadata(filename, metadata) {
   if (!res.ok) throw new Error((await res.json()).error || 'Failed to save metadata');
   return res.json();
 }
+
+export function getArtworkUrl(filename) {
+  return `${BASE}/downloads/${encodeURIComponent(filename)}/artwork`;
+}
+
+export async function uploadArtwork(filename, file) {
+  const base64 = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.readAsDataURL(file);
+  });
+  const res = await fetch(`${BASE}/downloads/${encodeURIComponent(filename)}/artwork`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ data: base64, contentType: file.type }),
+  });
+  if (!res.ok) throw new Error((await res.json()).error || 'Failed to upload artwork');
+  return res.json();
+}

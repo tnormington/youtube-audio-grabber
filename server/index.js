@@ -10,7 +10,7 @@ const PORT = 3001;
 const dm = new DownloadManager();
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 
 // Serve React build in production
 const webDist = path.join(__dirname, '..', 'web', 'dist');
@@ -82,6 +82,38 @@ app.get('/api/downloads/:filename/metadata', async (req, res) => {
   try {
     const metadata = await dm.readMetadata(req.params.filename);
     res.json(metadata);
+  } catch (err) {
+    res.status(err.message === 'File not found' ? 404 : 500).json({ error: err.message });
+  }
+});
+
+// Get artwork from an existing file
+app.get('/api/downloads/:filename/artwork', async (req, res) => {
+  try {
+    const result = await dm.extractArtwork(req.params.filename);
+    if (!result) return res.status(404).json({ error: 'No artwork found' });
+    res.set('Content-Type', result.contentType);
+    res.send(result.buffer);
+  } catch (err) {
+    res.status(err.message === 'File not found' ? 404 : 500).json({ error: err.message });
+  }
+});
+
+// Upload artwork to an existing file
+app.post('/api/downloads/:filename/artwork', async (req, res) => {
+  try {
+    let imageBuffer;
+    if (req.body.url) {
+      const imgRes = await fetch(req.body.url);
+      if (!imgRes.ok) throw new Error('Failed to download image from URL');
+      imageBuffer = Buffer.from(await imgRes.arrayBuffer());
+    } else if (req.body.data) {
+      imageBuffer = Buffer.from(req.body.data, 'base64');
+    } else {
+      return res.status(400).json({ error: 'Provide "url" or "data" (base64) in body' });
+    }
+    await dm.embedArtwork(req.params.filename, imageBuffer);
+    res.json({ success: true });
   } catch (err) {
     res.status(err.message === 'File not found' ? 404 : 500).json({ error: err.message });
   }
