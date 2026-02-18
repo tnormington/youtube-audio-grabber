@@ -408,6 +408,30 @@ export class DownloadManager {
     }
   }
 
+  async getPlaylistEntries(url) {
+    const cleanUrl = sanitizeYouTubeUrl(url);
+    const output = await this._execYtDlp([
+      '--flat-playlist', '--dump-json', '--no-download', cleanUrl,
+    ]);
+
+    const lines = output.trim().split('\n').filter(Boolean);
+    let playlistTitle = '';
+    const entries = lines.map((line) => {
+      const info = JSON.parse(line);
+      if (!playlistTitle && info.playlist_title) {
+        playlistTitle = info.playlist_title;
+      }
+      return {
+        url: info.webpage_url || `https://youtube.com/watch?v=${info.id}`,
+        title: info.title || info.id,
+        duration: info.duration || 0,
+        thumbnail: info.thumbnail || info.thumbnails?.[0]?.url || null,
+      };
+    });
+
+    return { title: playlistTitle, entries };
+  }
+
   _execYtDlp(args) {
     return new Promise((resolve, reject) => {
       const proc = spawn(YT_DLP_PATH, args, { stdio: 'pipe' });
