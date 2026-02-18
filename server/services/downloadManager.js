@@ -270,6 +270,10 @@ export class DownloadManager {
       // file may not have readable metadata
     }
 
+    if (!process.env.ANTHROPIC_API_KEY) {
+      throw new Error('ANTHROPIC_API_KEY environment variable is not set. Add it to your environment or a .env file.');
+    }
+
     const client = new Anthropic();
     const response = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
