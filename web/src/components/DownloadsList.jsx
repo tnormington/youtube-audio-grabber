@@ -7,14 +7,6 @@ function formatSize(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function formatDate(iso) {
-  return new Date(iso).toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-}
-
 export default function DownloadsList({ refreshKey, onEdit }) {
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -54,7 +46,6 @@ export default function DownloadsList({ refreshKey, onEdit }) {
               <th>Artist</th>
               <th>Album</th>
               <th>Size</th>
-              <th>Date</th>
               <th></th>
             </tr>
           </thead>
@@ -72,7 +63,6 @@ export default function DownloadsList({ refreshKey, onEdit }) {
                   {f.metadata?.album || '--'}
                 </td>
                 <td className="size-cell">{formatSize(f.size)}</td>
-                <td className="date-cell">{formatDate(f.date)}</td>
                 <td className="actions-cell">
                   <button className="btn-small" onClick={() => onEdit(f.filename)}>
                     Edit

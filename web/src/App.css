@@ -1,5 +1,5 @@
 .app {
-  max-width: 860px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 2rem 1.5rem 4rem;
 }
@@ -343,11 +343,6 @@ section h2 {
   font-variant-numeric: tabular-nums;
 }
 
-.downloads-list .date-cell {
-  color: var(--text-muted);
-  font-size: 0.82rem;
-}
-
 .downloads-list .actions-cell {
   text-align: right;
 }
@@ -372,10 +367,10 @@ section h2 {
   /* Hide less important columns on mobile */
   .downloads-list th:nth-child(3),
   .downloads-list td:nth-child(3),
+  .downloads-list th:nth-child(4),
+  .downloads-list td:nth-child(4),
   .downloads-list th:nth-child(5),
-  .downloads-list td:nth-child(5),
-  .downloads-list th:nth-child(6),
-  .downloads-list td:nth-child(6) {
+  .downloads-list td:nth-child(5) {
     display: none;
   }
 }
