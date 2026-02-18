@@ -22,8 +22,9 @@ export default function MetadataEditor({ filename, initialMetadata, onSaved }) {
     }
   }, [filename, initialMetadata]);
 
-  // Load artwork preview whenever filename changes
+  // Reset artwork state whenever filename changes
   useEffect(() => {
+    setYoutubeUrl('');
     if (!filename) {
       setArtworkSrc(null);
       return;
