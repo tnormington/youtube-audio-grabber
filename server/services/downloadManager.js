@@ -409,9 +409,9 @@ export class DownloadManager {
   }
 
   async getPlaylistEntries(url) {
-    const cleanUrl = sanitizeYouTubeUrl(url);
+    // Don't use sanitizeYouTubeUrl here — it strips the list= parameter
     const output = await this._execYtDlp([
-      '--flat-playlist', '--dump-json', '--no-download', cleanUrl,
+      '--flat-playlist', '--dump-json', '--no-download', url,
     ]);
 
     const lines = output.trim().split('\n').filter(Boolean);
