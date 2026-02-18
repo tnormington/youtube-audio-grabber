@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import UrlInput from './components/UrlInput';
 import DownloadProgress from './components/DownloadProgress';
-import MetadataEditor from './components/MetadataEditor';
 import DownloadsList from './components/DownloadsList';
 import {
   fetchVideoInfo,
@@ -134,15 +133,12 @@ export default function App() {
           onError={handleDownloadError}
         />
 
-        <MetadataEditor
-          filename={editingFile}
-          initialMetadata={initialMetadata}
-          onSaved={handleMetadataSaved}
-        />
-
         <DownloadsList
           refreshKey={refreshKey}
           onEdit={handleEditFile}
+          editingFile={editingFile}
+          initialMetadata={initialMetadata}
+          onSaved={handleMetadataSaved}
         />
       </main>
     </div>

@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { fetchDownloads, getArtworkUrl } from '../lib/api';
+import MetadataEditor from './MetadataEditor';
 
 function formatSize(bytes) {
   if (bytes < 1024) return `${bytes} B`;
@@ -7,7 +8,7 @@ function formatSize(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export default function DownloadsList({ refreshKey, onEdit }) {
+export default function DownloadsList({ refreshKey, onEdit, editingFile, initialMetadata, onSaved }) {
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -51,34 +52,50 @@ export default function DownloadsList({ refreshKey, onEdit }) {
             </tr>
           </thead>
           <tbody>
-            {files.map((f) => (
-              <tr key={f.filename}>
-                <td className="art-cell">
-                  <img
-                    src={getArtworkUrl(f.filename)}
-                    alt=""
-                    className="art-thumb"
-                    onError={(e) => { e.target.style.display = 'none'; }}
-                  />
-                </td>
-                <td className="filename-cell" title={f.filename}>{f.filename}</td>
-                <td className={`meta-cell ${f.metadata?.title ? '' : 'empty'}`}>
-                  {f.metadata?.title || '--'}
-                </td>
-                <td className={`meta-cell ${f.metadata?.artist ? '' : 'empty'}`}>
-                  {f.metadata?.artist || '--'}
-                </td>
-                <td className={`meta-cell ${f.metadata?.album ? '' : 'empty'}`}>
-                  {f.metadata?.album || '--'}
-                </td>
-                <td className="size-cell">{formatSize(f.size)}</td>
-                <td className="actions-cell">
-                  <button className="btn-small" onClick={() => onEdit(f.filename)}>
-                    Edit
-                  </button>
-                </td>
-              </tr>
-            ))}
+            {files.map((f) => {
+              const isEditing = editingFile === f.filename;
+              return (
+                <React.Fragment key={f.filename}>
+                  <tr className={isEditing ? 'active-row' : ''}>
+                    <td className="art-cell">
+                      <img
+                        src={getArtworkUrl(f.filename)}
+                        alt=""
+                        className="art-thumb"
+                        onError={(e) => { e.target.style.display = 'none'; }}
+                      />
+                    </td>
+                    <td className="filename-cell" title={f.filename}>{f.filename}</td>
+                    <td className={`meta-cell ${f.metadata?.title ? '' : 'empty'}`}>
+                      {f.metadata?.title || '--'}
+                    </td>
+                    <td className={`meta-cell ${f.metadata?.artist ? '' : 'empty'}`}>
+                      {f.metadata?.artist || '--'}
+                    </td>
+                    <td className={`meta-cell ${f.metadata?.album ? '' : 'empty'}`}>
+                      {f.metadata?.album || '--'}
+                    </td>
+                    <td className="size-cell">{formatSize(f.size)}</td>
+                    <td className="actions-cell">
+                      <button className="btn-small" onClick={() => onEdit(isEditing ? null : f.filename)}>
+                        {isEditing ? 'Close' : 'Edit'}
+                      </button>
+                    </td>
+                  </tr>
+                  {isEditing && (
+                    <tr className="editor-row">
+                      <td colSpan="7">
+                        <MetadataEditor
+                          filename={editingFile}
+                          initialMetadata={initialMetadata}
+                          onSaved={onSaved}
+                        />
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              );
+            })}
           </tbody>
         </table>
       )}

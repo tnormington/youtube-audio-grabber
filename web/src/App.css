@@ -562,6 +562,23 @@ section h2 {
   text-align: right;
 }
 
+.downloads-list tr.active-row td {
+  background: var(--primary-subtle);
+}
+
+.downloads-list tr.editor-row td {
+  padding: 0;
+  border-top: none;
+}
+
+.downloads-list tr.editor-row .metadata-editor {
+  margin: 0;
+  border-radius: 0 0 var(--radius) var(--radius);
+  border: none;
+  border-top: 1px solid var(--border);
+  animation: slideDown 250ms ease;
+}
+
 @media (max-width: 700px) {
   .app {
     padding: 1.5rem 1rem 3rem;
