@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { fetchDownloads, getArtworkUrl } from '../lib/api';
+import { fetchDownloads, getArtworkUrl, generateMetadata, saveMetadata } from '../lib/api';
 import MetadataEditor from './MetadataEditor';
 
 function formatSize(bytes) {
@@ -15,9 +15,15 @@ function formatDuration(seconds) {
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
+function hasNoMetadata(f) {
+  const m = f.metadata;
+  return !m?.title && !m?.artist && !m?.album && !m?.date;
+}
+
 export default function DownloadsList({ refreshKey, onEdit, editingFile, initialMetadata, onSaved }) {
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [bulkAI, setBulkAI] = useState(null); // { current, total } or null
 
   useEffect(() => {
     setLoading(true);
@@ -27,13 +33,43 @@ export default function DownloadsList({ refreshKey, onEdit, editingFile, initial
       .finally(() => setLoading(false));
   }, [refreshKey]);
 
+  const handleGenerateAll = async () => {
+    const empty = files.filter(hasNoMetadata);
+    if (empty.length === 0) return;
+    setBulkAI({ current: 0, total: empty.length });
+    for (let i = 0; i < empty.length; i++) {
+      setBulkAI({ current: i + 1, total: empty.length });
+      try {
+        const metadata = await generateMetadata(empty[i].filename);
+        await saveMetadata(empty[i].filename, metadata);
+      } catch {
+        // skip files that fail and continue
+      }
+    }
+    setBulkAI(null);
+    onSaved?.();
+  };
+
   return (
     <section className="downloads-list">
       <div className="list-header">
         <h2>Library</h2>
-        {!loading && files.length > 0 && (
-          <span className="file-count">{files.length} file{files.length !== 1 ? 's' : ''}</span>
-        )}
+        <div className="list-header-right">
+          {!loading && files.length > 0 && (
+            <span className="file-count">{files.length} file{files.length !== 1 ? 's' : ''}</span>
+          )}
+          {!loading && files.some(hasNoMetadata) && (
+            <button
+              className="btn-ai btn-small"
+              onClick={handleGenerateAll}
+              disabled={!!bulkAI}
+            >
+              {bulkAI
+                ? `Generating ${bulkAI.current}/${bulkAI.total}...`
+                : 'Generate All AI Metadata'}
+            </button>
+          )}
+        </div>
       </div>
 
       {loading ? (
