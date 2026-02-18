@@ -3,6 +3,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import os from 'os';
 import { randomUUID } from 'crypto';
+import Anthropic from '@anthropic-ai/sdk';
 import { MetadataParser } from '../../src/metadataParser.js';
 import {
   sanitizeFilename,
@@ -257,6 +258,54 @@ export class DownloadManager {
 
       proc.on('error', (err) => reject(err));
     });
+  }
+
+  async generateMetadata(filename) {
+    const baseName = filename.replace(/\.(m4a|mp3|webm)$/, '');
+
+    let currentMetadata = { title: '', artist: '', album: '', date: '' };
+    try {
+      currentMetadata = await this.readMetadata(filename);
+    } catch {
+      // file may not have readable metadata
+    }
+
+    const client = new Anthropic();
+    const response = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 256,
+      messages: [{
+        role: 'user',
+        content: `You are a music metadata expert. Given a filename from a YouTube audio download, identify the song metadata.
+
+Filename: "${baseName}"
+
+Current metadata (may be empty or inaccurate):
+- Title: "${currentMetadata.title}"
+- Artist: "${currentMetadata.artist}"
+- Album: "${currentMetadata.album}"
+- Year: "${currentMetadata.date}"
+
+Instructions:
+- Identify the artist name and clean song title
+- Remove clutter like "Official Video", "Official Audio", "HD", "HQ", "Lyrics", "Music Video", "(Audio)", "[Official]", etc.
+- If you can identify the album and release year from your knowledge, include them
+- If you cannot confidently determine a field, return an empty string for it
+- Improve existing metadata if it looks incomplete or poorly formatted
+
+Respond with ONLY a JSON object, no markdown fencing:
+{"title": "...", "artist": "...", "album": "...", "date": "..."}`,
+      }],
+    });
+
+    const text = response.content[0].text.trim();
+    const parsed = JSON.parse(text);
+    return {
+      title: parsed.title || '',
+      artist: parsed.artist || '',
+      album: parsed.album || '',
+      date: parsed.date || '',
+    };
   }
 
   async writeMetadata(filename, metadata) {

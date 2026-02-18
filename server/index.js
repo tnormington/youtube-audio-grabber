@@ -143,6 +143,18 @@ app.post('/api/downloads/:filename/artwork/youtube', async (req, res) => {
   }
 });
 
+// Generate metadata with AI
+app.post('/api/generate-metadata', async (req, res) => {
+  const { filename } = req.body;
+  if (!filename) return res.status(400).json({ error: 'filename is required' });
+  try {
+    const metadata = await dm.generateMetadata(filename);
+    res.json(metadata);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Write metadata to an existing file
 app.put('/api/metadata/:filename', async (req, res) => {
   try {

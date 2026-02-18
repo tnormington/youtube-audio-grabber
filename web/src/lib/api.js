@@ -66,6 +66,16 @@ export async function fetchMetadata(filename) {
   return res.json();
 }
 
+export async function generateMetadata(filename) {
+  const res = await fetch(`${BASE}/generate-metadata`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ filename }),
+  });
+  if (!res.ok) throw await parseError(res, 'Failed to generate metadata');
+  return res.json();
+}
+
 export async function saveMetadata(filename, metadata) {
   const res = await fetch(`${BASE}/metadata/${encodeURIComponent(filename)}`, {
     method: 'PUT',

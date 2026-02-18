@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { saveMetadata, fetchMetadata, getArtworkUrl, uploadArtwork, fetchYouTubeArtwork } from '../lib/api';
+import { saveMetadata, fetchMetadata, generateMetadata, getArtworkUrl, uploadArtwork, fetchYouTubeArtwork } from '../lib/api';
 
 export default function MetadataEditor({ filename, initialMetadata, onSaved }) {
   const [form, setForm] = useState({ title: '', artist: '', album: '', date: '' });
@@ -8,6 +8,7 @@ export default function MetadataEditor({ filename, initialMetadata, onSaved }) {
   const [artworkSrc, setArtworkSrc] = useState(null);
   const [uploadingArt, setUploadingArt] = useState(false);
   const [fetchingYT, setFetchingYT] = useState(false);
+  const [generatingAI, setGeneratingAI] = useState(false);
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const fileInputRef = useRef(null);
 
@@ -77,6 +78,20 @@ export default function MetadataEditor({ filename, initialMetadata, onSaved }) {
       setMessage(`Error: ${err.message}`);
     } finally {
       setFetchingYT(false);
+    }
+  };
+
+  const handleGenerateAI = async () => {
+    setGeneratingAI(true);
+    setMessage('');
+    try {
+      const metadata = await generateMetadata(filename);
+      setForm(metadata);
+      setMessage('AI metadata generated — review and save.');
+    } catch (err) {
+      setMessage(`Error: ${err.message}`);
+    } finally {
+      setGeneratingAI(false);
     }
   };
 
@@ -154,6 +169,9 @@ export default function MetadataEditor({ filename, initialMetadata, onSaved }) {
       <div className="editor-actions">
         <button className="btn-primary" onClick={handleSave} disabled={saving}>
           {saving ? 'Saving...' : 'Save'}
+        </button>
+        <button className="btn-ai" onClick={handleGenerateAI} disabled={generatingAI || saving}>
+          {generatingAI ? 'Generating...' : 'Generate with AI'}
         </button>
         {message && (
           <span className={`message ${message.startsWith('Error') ? 'error' : 'success'}`}>
