@@ -300,7 +300,9 @@ export class DownloadManager {
       '--dump-json', '--no-playlist', '--no-download',
       `ytsearch1:${query}`,
     ]);
-    const info = JSON.parse(output.trim());
+    const trimmed = output.trim();
+    if (!trimmed) throw new Error('No YouTube results found for this search');
+    const info = JSON.parse(trimmed);
     if (!info.thumbnail) throw new Error('No thumbnail found for this video');
     const thumbRes = await fetch(info.thumbnail);
     if (!thumbRes.ok) throw new Error('Failed to download YouTube thumbnail');

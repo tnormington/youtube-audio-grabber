@@ -1,8 +1,17 @@
 const BASE = '/api';
 
+async function parseError(res, fallback) {
+  try {
+    const body = await res.json();
+    return new Error(body.error || fallback);
+  } catch {
+    return new Error(fallback);
+  }
+}
+
 export async function fetchVideoInfo(url) {
   const res = await fetch(`${BASE}/video-info?url=${encodeURIComponent(url)}`);
-  if (!res.ok) throw new Error((await res.json()).error || 'Failed to fetch video info');
+  if (!res.ok) throw await parseError(res, 'Failed to fetch video info');
   return res.json();
 }
 
@@ -12,7 +21,7 @@ export async function startDownload(url) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ url }),
   });
-  if (!res.ok) throw new Error((await res.json()).error || 'Failed to start download');
+  if (!res.ok) throw await parseError(res, 'Failed to start download');
   return res.json();
 }
 
@@ -34,13 +43,13 @@ export function subscribeProgress(jobId, onEvent) {
 
 export async function fetchDownloads() {
   const res = await fetch(`${BASE}/downloads`);
-  if (!res.ok) throw new Error('Failed to fetch downloads');
+  if (!res.ok) throw await parseError(res, 'Failed to fetch downloads');
   return res.json();
 }
 
 export async function fetchMetadata(filename) {
   const res = await fetch(`${BASE}/downloads/${encodeURIComponent(filename)}/metadata`);
-  if (!res.ok) throw new Error('Failed to fetch metadata');
+  if (!res.ok) throw await parseError(res, 'Failed to fetch metadata');
   return res.json();
 }
 
@@ -50,7 +59,7 @@ export async function saveMetadata(filename, metadata) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(metadata),
   });
-  if (!res.ok) throw new Error((await res.json()).error || 'Failed to save metadata');
+  if (!res.ok) throw await parseError(res, 'Failed to save metadata');
   return res.json();
 }
 
@@ -62,7 +71,7 @@ export async function fetchYouTubeArtwork(filename) {
   const res = await fetch(`${BASE}/downloads/${encodeURIComponent(filename)}/artwork/youtube`, {
     method: 'POST',
   });
-  if (!res.ok) throw new Error((await res.json()).error || 'Failed to fetch YouTube artwork');
+  if (!res.ok) throw await parseError(res, 'Failed to fetch YouTube artwork');
   return res.json();
 }
 
@@ -78,6 +87,6 @@ export async function uploadArtwork(filename, file) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ data: base64, contentType: file.type }),
   });
-  if (!res.ok) throw new Error((await res.json()).error || 'Failed to upload artwork');
+  if (!res.ok) throw await parseError(res, 'Failed to upload artwork');
   return res.json();
 }
