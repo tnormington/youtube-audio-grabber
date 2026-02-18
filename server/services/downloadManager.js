@@ -242,11 +242,11 @@ export class DownloadManager {
           else if (k === 'date') metadata.date = value;
         }
 
-        // Also try to extract from stderr (ffmpeg prints metadata there)
-        const titleMatch = stderr.match(/title\s*:\s*(.+)/i);
-        const artistMatch = stderr.match(/artist\s*:\s*(.+)/i);
-        const albumMatch = stderr.match(/album\s*:\s*(.+)/i);
-        const dateMatch = stderr.match(/date\s*:\s*(.+)/i);
+        // Also try to extract from stderr (ffmpeg prints metadata in indented lines)
+        const titleMatch = stderr.match(/^\s+title\s+:\s*(.+)/im);
+        const artistMatch = stderr.match(/^\s+artist\s+:\s*(.+)/im);
+        const albumMatch = stderr.match(/^\s+album\s+:\s*(.+)/im);
+        const dateMatch = stderr.match(/^\s+date\s+:\s*(.+)/im);
         const durationMatch = stderr.match(/Duration:\s*(\d+):(\d+):(\d+)\.(\d+)/);
 
         if (!metadata.title && titleMatch) metadata.title = titleMatch[1].trim();
