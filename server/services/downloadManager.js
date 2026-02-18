@@ -354,16 +354,55 @@ Respond with ONLY a JSON object, no markdown fencing:
     await fs.move(tempPath, filePath, { overwrite: true });
   }
 
+  _buildSearchQueries(query) {
+    const base = query.trim();
+    // Remove common clutter patterns
+    const cleaned = base
+      .replace(/\(?(official\s*(video|audio|music\s*video|lyric\s*video)?|lyrics?|hd|hq|4k|audio|full\s*show|complete\s*show|remaster(ed)?)\)?/gi, '')
+      .replace(/[\[\(].*?[\]\)]/g, '')
+      .trim();
+
+    // Try to split artist - title on common separators
+    const sepMatch = cleaned.match(/^(.+?)\s*[-–—~|:]\s*(.+)$/);
+    const queries = [base];
+    if (cleaned !== base) queries.push(cleaned);
+    if (sepMatch) {
+      const artist = sepMatch[1].trim();
+      const title = sepMatch[2].trim();
+      queries.push(`${artist} ${title}`);
+      queries.push(`${artist} - ${title} audio`);
+    }
+    queries.push(`${cleaned} audio`);
+
+    // Deduplicate while preserving order
+    return [...new Set(queries)];
+  }
+
   async searchYouTubeThumbnail(query) {
     const isUrl = /^https?:\/\//.test(query);
+    if (isUrl) {
+      return this._fetchYouTubeThumbnail(query);
+    }
+
+    const queries = this._buildSearchQueries(query);
+    for (const q of queries) {
+      try {
+        return await this._fetchYouTubeThumbnail(`ytsearch1:${q}`);
+      } catch {
+        // try next query variation
+      }
+    }
+    throw new Error('No YouTube results found after trying multiple search variations');
+  }
+
+  async _fetchYouTubeThumbnail(searchTerm) {
     const output = await this._execYtDlp([
-      '--dump-json', '--no-playlist', '--no-download',
-      isUrl ? query : `ytsearch1:${query}`,
+      '--dump-json', '--no-playlist', '--no-download', searchTerm,
     ]);
     const trimmed = output.trim();
-    if (!trimmed) throw new Error('No YouTube results found for this search');
+    if (!trimmed) throw new Error('No YouTube results found');
     const info = JSON.parse(trimmed);
-    if (!info.thumbnail) throw new Error('No thumbnail found for this video');
+    if (!info.thumbnail) throw new Error('No thumbnail found');
     const thumbRes = await fetch(info.thumbnail);
     if (!thumbRes.ok) throw new Error('Failed to download YouTube thumbnail');
     return Buffer.from(await thumbRes.arrayBuffer());
