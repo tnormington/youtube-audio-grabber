@@ -148,6 +148,93 @@ section h2 {
   font-weight: 500;
 }
 
+/* --- Playlist hint & preview --- */
+.playlist-hint {
+  margin-top: 0.75rem;
+  font-size: 0.82rem;
+  color: var(--primary);
+  font-weight: 500;
+}
+
+.playlist-info {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+  animation: slideDown 300ms ease;
+}
+
+.playlist-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.playlist-header h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.playlist-count {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.playlist-entries {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 1rem;
+  max-height: 280px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.25rem;
+}
+
+.playlist-entry {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+}
+
+.playlist-entry:hover {
+  background: var(--surface-hover);
+}
+
+.playlist-entry-num {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  min-width: 2ch;
+  text-align: right;
+}
+
+.playlist-entry-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.playlist-entry-duration {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.playlist-entry.more {
+  color: var(--text-muted);
+  font-style: italic;
+  padding-left: 2.5rem;
+}
+
 /* --- DownloadProgress --- */
 .download-progress {
   position: relative;
@@ -224,6 +311,34 @@ section h2 {
 
 .status-label.error {
   color: var(--error);
+}
+
+/* --- Download queue (multi-job) --- */
+.download-summary {
+  margin-bottom: 0.75rem;
+}
+
+.download-queue {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.download-job {
+  padding: 0.5rem 0;
+}
+
+.download-job + .download-job {
+  border-top: 1px solid var(--border);
+}
+
+.download-job-label {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.35rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* --- MetadataEditor --- */
