@@ -1,0 +1,177 @@
+.app {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+header h1 {
+  font-size: 1.6rem;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+section {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+section h2 {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+  color: var(--text-muted);
+}
+
+/* Error banner */
+.error-banner {
+  background: var(--error);
+  color: #fff;
+  padding: 0.7rem 1rem;
+  border-radius: var(--radius);
+  margin-bottom: 1rem;
+}
+
+/* UrlInput */
+.url-input .input-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.url-input .input-row input {
+  flex: 1;
+}
+
+.video-info {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  align-items: flex-start;
+}
+
+.video-info .thumbnail {
+  width: 180px;
+  border-radius: var(--radius);
+  flex-shrink: 0;
+}
+
+.video-info .video-details h3 {
+  font-size: 1rem;
+  margin-bottom: 0.3rem;
+}
+
+.video-info .uploader {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.video-info .duration {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.suggested-metadata {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.2rem;
+  font-size: 0.85rem;
+  margin-bottom: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* DownloadProgress */
+.download-progress h2 {
+  margin-bottom: 0.5rem;
+}
+
+.progress-bar-container {
+  height: 8px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.3rem;
+}
+
+.progress-bar {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.progress-bar.complete {
+  background: var(--success);
+}
+
+.progress-bar.error {
+  background: var(--error);
+}
+
+.progress-text {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* MetadataEditor */
+.metadata-editor h2 {
+  word-break: break-all;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.form-grid input {
+  width: 100%;
+}
+
+.message {
+  margin-top: 0.7rem;
+  font-size: 0.9rem;
+}
+
+.message.success {
+  color: var(--success);
+}
+
+.message.error {
+  color: var(--error);
+}
+
+/* DownloadsList */
+.downloads-list .empty {
+  color: var(--text-muted);
+}
+
+.downloads-list .filename {
+  max-width: 350px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  .video-info {
+    flex-direction: column;
+  }
+
+  .video-info .thumbnail {
+    width: 100%;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}

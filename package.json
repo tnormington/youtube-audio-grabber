@@ -1,0 +1,43 @@
+{
+  "name": "youtube-audio-grabber",
+  "version": "1.0.0",
+  "description": "A tool to download audio from YouTube videos",
+  "main": "src/cli.js",
+  "type": "module",
+  "bin": {
+    "youtube-audio": "./src/cli.js"
+  },
+  "scripts": {
+    "start": "node src/cli.js",
+    "grab": "node src/cli.js grab",
+    "download": "node src/cli.js download",
+    "move": "node src/cli.js move",
+    "edit-metadata": "node src/cli.js edit-metadata",
+    "server": "node server/index.js",
+    "dev:server": "node --watch server/index.js",
+    "dev:web": "npm --prefix web run dev",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:web\"",
+    "build": "npm --prefix web run build",
+    "prod": "npm run build && node server/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^11.0.0",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "fs-extra": "^11.1.1"
+  },
+  "keywords": [
+    "youtube",
+    "audio",
+    "downloader",
+    "yt-dlp",
+    "cli"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
