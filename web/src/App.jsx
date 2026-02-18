@@ -56,7 +56,7 @@ export default function App() {
 
   const handleEditFile = useCallback((filename) => {
     setEditingFile(filename);
-    setInitialMetadata(null); // will be loaded from file
+    setInitialMetadata(null);
   }, []);
 
   const handleMetadataSaved = useCallback(() => {
@@ -67,10 +67,16 @@ export default function App() {
     <div className="app">
       <header>
         <h1>YouTube Audio Grabber</h1>
+        <p>Download, tag, and organize audio from YouTube</p>
       </header>
 
       <main>
-        {error && <div className="error-banner">{error}</div>}
+        {error && (
+          <div className="error-banner">
+            <span>{error}</span>
+            <button onClick={() => setError('')} aria-label="Dismiss">&times;</button>
+          </div>
+        )}
 
         <UrlInput
           onFetchInfo={handleFetchInfo}

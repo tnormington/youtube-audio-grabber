@@ -179,11 +179,18 @@ export class DownloadManager {
     for (const file of audioFiles) {
       const filePath = path.join(downloadDir, file);
       const stat = await fs.stat(filePath);
-      results.push({
+      const entry = {
         filename: file,
         size: stat.size,
         date: stat.mtime.toISOString(),
-      });
+        metadata: { title: '', artist: '', album: '', date: '' },
+      };
+      try {
+        entry.metadata = await this.readMetadata(file);
+      } catch {
+        // metadata read may fail for some files, that's ok
+      }
+      results.push(entry);
     }
     return results.sort((a, b) => new Date(b.date) - new Date(a.date));
   }

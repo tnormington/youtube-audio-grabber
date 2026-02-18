@@ -29,16 +29,30 @@ export default function DownloadsList({ refreshKey, onEdit }) {
 
   return (
     <section className="downloads-list">
-      <h2>Downloaded Files</h2>
+      <div className="list-header">
+        <h2>Library</h2>
+        {!loading && files.length > 0 && (
+          <span className="file-count">{files.length} file{files.length !== 1 ? 's' : ''}</span>
+        )}
+      </div>
+
       {loading ? (
-        <p>Loading...</p>
+        <div className="loading-skeleton">
+          {[...Array(3)].map((_, i) => <div key={i} className="skeleton-row" />)}
+        </div>
       ) : files.length === 0 ? (
-        <p className="empty">No downloaded files yet.</p>
+        <div className="empty-state">
+          <div className="icon">~</div>
+          <p>No downloaded files yet</p>
+        </div>
       ) : (
         <table>
           <thead>
             <tr>
               <th>Filename</th>
+              <th>Title</th>
+              <th>Artist</th>
+              <th>Album</th>
               <th>Size</th>
               <th>Date</th>
               <th></th>
@@ -47,12 +61,21 @@ export default function DownloadsList({ refreshKey, onEdit }) {
           <tbody>
             {files.map((f) => (
               <tr key={f.filename}>
-                <td className="filename">{f.filename}</td>
-                <td>{formatSize(f.size)}</td>
-                <td>{formatDate(f.date)}</td>
-                <td>
+                <td className="filename-cell" title={f.filename}>{f.filename}</td>
+                <td className={`meta-cell ${f.metadata?.title ? '' : 'empty'}`}>
+                  {f.metadata?.title || '--'}
+                </td>
+                <td className={`meta-cell ${f.metadata?.artist ? '' : 'empty'}`}>
+                  {f.metadata?.artist || '--'}
+                </td>
+                <td className={`meta-cell ${f.metadata?.album ? '' : 'empty'}`}>
+                  {f.metadata?.album || '--'}
+                </td>
+                <td className="size-cell">{formatSize(f.size)}</td>
+                <td className="date-cell">{formatDate(f.date)}</td>
+                <td className="actions-cell">
                   <button className="btn-small" onClick={() => onEdit(f.filename)}>
-                    Edit Metadata
+                    Edit
                   </button>
                 </td>
               </tr>

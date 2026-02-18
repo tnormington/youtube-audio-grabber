@@ -38,7 +38,7 @@ export default function MetadataEditor({ filename, initialMetadata, onSaved }) {
 
   return (
     <section className="metadata-editor">
-      <h2>Edit Metadata — {filename}</h2>
+      <h2>Edit Metadata</h2>
       <div className="form-grid">
         <label>
           Title
@@ -57,10 +57,16 @@ export default function MetadataEditor({ filename, initialMetadata, onSaved }) {
           <input value={form.date} onChange={handleChange('date')} />
         </label>
       </div>
-      <button className="btn-primary" onClick={handleSave} disabled={saving}>
-        {saving ? 'Saving...' : 'Save Metadata'}
-      </button>
-      {message && <p className={`message ${message.startsWith('Error') ? 'error' : 'success'}`}>{message}</p>}
+      <div className="editor-actions">
+        <button className="btn-primary" onClick={handleSave} disabled={saving}>
+          {saving ? 'Saving...' : 'Save'}
+        </button>
+        {message && (
+          <span className={`message ${message.startsWith('Error') ? 'error' : 'success'}`}>
+            {message}
+          </span>
+        )}
+      </div>
     </section>
   );
 }

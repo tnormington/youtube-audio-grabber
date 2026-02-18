@@ -7,82 +7,117 @@
 }
 
 :root {
-  --bg: #1a1b2e;
-  --surface: #242640;
-  --surface-hover: #2e3054;
-  --border: #3a3c5a;
-  --text: #e4e4ed;
-  --text-muted: #9698b0;
-  --primary: #7c5cfc;
-  --primary-hover: #6a48e8;
-  --success: #4caf82;
-  --error: #e85454;
-  --radius: 8px;
+  --bg: #0c0d1a;
+  --bg-gradient: linear-gradient(135deg, #0c0d1a 0%, #141628 50%, #0f1020 100%);
+  --surface: rgba(255, 255, 255, 0.04);
+  --surface-border: rgba(255, 255, 255, 0.08);
+  --surface-hover: rgba(255, 255, 255, 0.07);
+  --surface-active: rgba(255, 255, 255, 0.1);
+  --border: rgba(255, 255, 255, 0.06);
+  --text: #eaebf3;
+  --text-secondary: #a3a5c2;
+  --text-muted: #6b6d8a;
+  --primary: #8b6cff;
+  --primary-glow: rgba(139, 108, 255, 0.25);
+  --primary-hover: #7a58f0;
+  --primary-subtle: rgba(139, 108, 255, 0.1);
+  --success: #3dd68c;
+  --success-glow: rgba(61, 214, 140, 0.2);
+  --error: #ff5c5c;
+  --error-subtle: rgba(255, 92, 92, 0.1);
+  --warning: #ffb347;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-lg: 16px;
+  --shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+  --transition: 200ms cubic-bezier(0.4, 0, 0.2, 1);
 
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  line-height: 1.5;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
   color: var(--text);
-  background: var(--bg);
+  background: var(--bg-gradient);
+  background-attachment: fixed;
 }
 
 body {
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-input,
-button {
+/* --- Inputs --- */
+input {
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  padding: 0.65rem 0.9rem;
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
   font-family: inherit;
   font-size: inherit;
 }
 
-input {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  color: var(--text);
-  padding: 0.6rem 0.8rem;
-  outline: none;
-  transition: border-color 0.2s;
+input::placeholder {
+  color: var(--text-muted);
 }
 
 input:focus {
   border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
 }
 
+/* --- Buttons --- */
 button {
   border: none;
-  border-radius: var(--radius);
-  padding: 0.6rem 1.2rem;
+  border-radius: var(--radius-sm);
+  padding: 0.65rem 1.3rem;
   cursor: pointer;
   font-weight: 500;
+  font-family: inherit;
+  font-size: inherit;
   background: var(--surface);
+  border: 1px solid var(--surface-border);
   color: var(--text);
-  transition: background 0.2s;
+  transition: all var(--transition);
+  white-space: nowrap;
 }
 
 button:hover:not(:disabled) {
   background: var(--surface-hover);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 button:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
 .btn-primary {
   background: var(--primary);
+  border-color: transparent;
   color: #fff;
+  font-weight: 600;
 }
 
 .btn-primary:hover:not(:disabled) {
   background: var(--primary-hover);
+  border-color: transparent;
+  box-shadow: 0 4px 20px var(--primary-glow);
 }
 
 .btn-small {
-  padding: 0.3rem 0.7rem;
-  font-size: 0.85rem;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.82rem;
+  border-radius: 6px;
 }
 
+/* --- Tables --- */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -91,14 +126,52 @@ table {
 th,
 td {
   text-align: left;
-  padding: 0.6rem 0.8rem;
-  border-bottom: 1px solid var(--border);
+  padding: 0.65rem 0.75rem;
 }
 
 th {
   color: var(--text-muted);
   font-weight: 500;
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
+  border-bottom: 1px solid var(--border);
+}
+
+td {
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+tbody tr {
+  transition: background var(--transition);
+}
+
+tbody tr:hover {
+  background: var(--surface-hover);
+}
+
+/* --- Spinner keyframes --- */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
