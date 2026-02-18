@@ -231,7 +231,7 @@ export class DownloadManager {
 
       proc.on('close', () => {
         // Parse ffmetadata format
-        const metadata = { title: '', artist: '', album: '', date: '' };
+        const metadata = { title: '', artist: '', album: '', date: '', duration: 0 };
         for (const line of stdout.split('\n')) {
           const [key, ...rest] = line.split('=');
           const value = rest.join('=').trim();
@@ -247,11 +247,17 @@ export class DownloadManager {
         const artistMatch = stderr.match(/artist\s*:\s*(.+)/i);
         const albumMatch = stderr.match(/album\s*:\s*(.+)/i);
         const dateMatch = stderr.match(/date\s*:\s*(.+)/i);
+        const durationMatch = stderr.match(/Duration:\s*(\d+):(\d+):(\d+)\.(\d+)/);
 
         if (!metadata.title && titleMatch) metadata.title = titleMatch[1].trim();
         if (!metadata.artist && artistMatch) metadata.artist = artistMatch[1].trim();
         if (!metadata.album && albumMatch) metadata.album = albumMatch[1].trim();
         if (!metadata.date && dateMatch) metadata.date = dateMatch[1].trim();
+        if (durationMatch) {
+          metadata.duration = parseInt(durationMatch[1]) * 3600
+            + parseInt(durationMatch[2]) * 60
+            + parseInt(durationMatch[3]);
+        }
 
         resolve(metadata);
       });

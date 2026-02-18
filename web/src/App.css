@@ -552,6 +552,13 @@ section h2 {
   font-style: italic;
 }
 
+.downloads-list .duration-cell {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 .downloads-list .size-cell {
   color: var(--text-muted);
   font-size: 0.85rem;
@@ -607,7 +614,9 @@ section h2 {
   .downloads-list th:nth-child(5),
   .downloads-list td:nth-child(5),
   .downloads-list th:nth-child(6),
-  .downloads-list td:nth-child(6) {
+  .downloads-list td:nth-child(6),
+  .downloads-list th:nth-child(7),
+  .downloads-list td:nth-child(7) {
     display: none;
   }
 }

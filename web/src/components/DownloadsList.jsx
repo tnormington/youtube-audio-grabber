@@ -8,6 +8,13 @@ function formatSize(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+function formatDuration(seconds) {
+  if (!seconds) return '--';
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
 export default function DownloadsList({ refreshKey, onEdit, editingFile, initialMetadata, onSaved }) {
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -47,6 +54,7 @@ export default function DownloadsList({ refreshKey, onEdit, editingFile, initial
               <th>Title</th>
               <th>Artist</th>
               <th>Album</th>
+              <th>Length</th>
               <th>Size</th>
               <th></th>
             </tr>
@@ -75,6 +83,7 @@ export default function DownloadsList({ refreshKey, onEdit, editingFile, initial
                     <td className={`meta-cell ${f.metadata?.album ? '' : 'empty'}`}>
                       {f.metadata?.album || '--'}
                     </td>
+                    <td className="duration-cell">{formatDuration(f.metadata?.duration)}</td>
                     <td className="size-cell">{formatSize(f.size)}</td>
                     <td className="actions-cell">
                       <button className="btn-small" onClick={() => onEdit(isEditing ? null : f.filename)}>
@@ -84,7 +93,7 @@ export default function DownloadsList({ refreshKey, onEdit, editingFile, initial
                   </tr>
                   {isEditing && (
                     <tr className="editor-row">
-                      <td colSpan="7">
+                      <td colSpan="8">
                         <MetadataEditor
                           filename={editingFile}
                           initialMetadata={initialMetadata}
