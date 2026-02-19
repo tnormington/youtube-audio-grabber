@@ -1,6 +1,6 @@
 export class MetadataParser {
   parseVideoInfo(videoInfo) {
-    const metadata = {
+    return {
       title: videoInfo.title || 'Unknown',
       artist: this.extractArtist(videoInfo),
       album: this.extractAlbum(videoInfo),
@@ -8,191 +8,142 @@ export class MetadataParser {
       description: videoInfo.description || '',
       uploader: videoInfo.uploader || videoInfo.channel || 'YouTube',
       duration: videoInfo.duration || 0,
-      url: videoInfo.webpage_url || ''
+      url: videoInfo.webpage_url || '',
     };
-
-    return metadata;
   }
 
   extractArtist(videoInfo) {
     const title = videoInfo.title || '';
-    const uploader = videoInfo.uploader || '';
-    const description = (videoInfo.description || '').substring(0, 500);
+    const description = videoInfo.description || '';
 
-    // Pattern 1: "Artist - Song Title" 
-    const dashPattern = title.match(/^([^-]+)\s*-\s*(.+)$/);
-    if (dashPattern) {
-      const possibleArtist = dashPattern[1].trim();
-      // Filter out common non-artist patterns
-      if (!this.isGenericTitle(possibleArtist)) {
-        return possibleArtist;
+    // 1. "Artist - Song Title" in the video title
+    const dashMatch = title.match(/^([^-–—]+)\s*[-–—]\s*(.+)$/);
+    if (dashMatch) {
+      const candidate = dashMatch[1].trim();
+      if (!this._isClutter(candidate) && candidate.length >= 2) {
+        return this._cleanName(candidate);
       }
     }
 
-    // Pattern 2: "Artist: Song Title"
-    const colonPattern = title.match(/^([^:]+):\s*(.+)$/);
-    if (colonPattern) {
-      const possibleArtist = colonPattern[1].trim();
-      if (!this.isGenericTitle(possibleArtist)) {
-        return possibleArtist;
+    // 2. Explicit labels in description
+    const descArtist = this._scanDescription(description, [
+      /^artist\s*:\s*(.+)/im,
+      /^performed\s+by\s*:\s*(.+)/im,
+      /^performed\s+by\s+(.+)/im,
+      /^music\s+by\s*:\s*(.+)/im,
+      /^written\s+(?:and\s+performed\s+)?by\s*:\s*(.+)/im,
+      /^singer\s*:\s*(.+)/im,
+      /^vocals?\s*:\s*(.+)/im,
+    ]);
+    if (descArtist) return descArtist;
+
+    // 3. "Artist | Song Title" or "Artist ~ Song Title"
+    const altSepMatch = title.match(/^([^|~]+)\s*[|~]\s*(.+)$/);
+    if (altSepMatch) {
+      const candidate = altSepMatch[1].trim();
+      if (!this._isClutter(candidate) && candidate.length >= 2) {
+        return this._cleanName(candidate);
       }
     }
 
-    // Pattern 3: Look for "Artist" or "Performed by" in description
-    const artistFromDesc = this.extractArtistFromDescription(description);
-    if (artistFromDesc) {
-      return artistFromDesc;
-    }
-
-    // Pattern 4: Check if uploader looks like an artist name
-    if (uploader && !this.isGenericUploader(uploader)) {
-      return uploader;
-    }
-
-    // Pattern 5: Try to extract from common music video formats
-    const musicPatterns = [
-      /by\s+([^(\n]+)/i,
-      /artist[:\s]+([^(\n]+)/i,
-      /performed\s+by\s+([^(\n]+)/i
-    ];
-
-    for (const pattern of musicPatterns) {
-      const match = description.match(pattern);
-      if (match && match[1]) {
-        const artist = match[1].trim().replace(/[,.\n\r]+$/, '');
-        if (!this.isGenericTitle(artist)) {
-          return artist;
-        }
-      }
-    }
-
-    return videoInfo.uploader || 'Unknown Artist';
+    return '';
   }
 
   extractAlbum(videoInfo) {
-    const description = (videoInfo.description || '').substring(0, 1000);
+    const description = videoInfo.description || '';
     const title = videoInfo.title || '';
 
-    // Look for album information in description
-    const albumPatterns = [
-      /album[:\s]+([^(\n]+)/i,
-      /from\s+(?:the\s+)?album[:\s]+([^(\n]+)/i,
-      /from[:\s]+([^(\n]+)/i,
-      /℗.*?(\d{4})/i  // Copyright year
-    ];
+    // 1. Explicit album labels in description
+    const descAlbum = this._scanDescription(description, [
+      /^album\s*:\s*(.+)/im,
+      /^from\s+(?:the\s+)?album\s*[:\-–]\s*(.+)/im,
+      /^(?:taken|off)\s+(?:the\s+)?(?:album|record|LP|EP)\s*[:\-–]\s*(.+)/im,
+    ]);
+    if (descAlbum) return descAlbum;
 
-    for (const pattern of albumPatterns) {
-      const match = description.match(pattern);
-      if (match && match[1]) {
-        const album = match[1].trim().replace(/[,.\n\r"']+$/, '');
-        if (album.length > 2 && album.length < 100) {
-          return album;
-        }
-      }
+    // 2. Inline "from the album ..." in description
+    const inlineAlbum = description.match(/from\s+(?:the\s+)?album\s+[""'']?([^""''\n]+)[""'']?/i);
+    if (inlineAlbum) {
+      const album = this._cleanName(inlineAlbum[1]);
+      if (album.length > 1 && album.length < 100) return album;
     }
 
-    // Check if title contains album info in parentheses
-    const titleAlbum = title.match(/\(([^)]+(?:album|EP|LP|single)[^)]*)\)/i);
-    if (titleAlbum) {
-      return titleAlbum[1].trim();
-    }
+    // 3. Album info in parentheses in the title
+    const titleAlbum = title.match(/\(([^)]*(?:album|EP|LP|single)[^)]*)\)/i);
+    if (titleAlbum) return this._cleanName(titleAlbum[1]);
 
-    return videoInfo.uploader || 'YouTube';
+    return '';
   }
 
   extractDate(videoInfo) {
-    // Try upload date first
-    if (videoInfo.upload_date) {
-      const dateStr = videoInfo.upload_date.toString();
-      if (dateStr.length === 8) { // YYYYMMDD format
-        return dateStr.substring(0, 4); // Return year
-      }
+    const description = videoInfo.description || '';
+
+    // 1. Explicit release year labels in description
+    const descDate = this._scanDescription(description, [
+      /^(?:release(?:d)?|year)\s*:\s*(.+)/im,
+      /^released?\s+(?:on\s+)?(.+)/im,
+    ]);
+    if (descDate) {
+      const year = descDate.match(/((?:19|20)\d{2})/);
+      if (year) return year[1];
     }
 
-    // Look for year in description or title
-    const description = (videoInfo.description || '') + ' ' + (videoInfo.title || '');
-    const yearMatch = description.match(/(?:19|20)\d{2}/);
-    if (yearMatch) {
-      return yearMatch[0];
-    }
+    // 2. Copyright/phonographic lines (℗ 2021 or © 2021)
+    const copyrightMatch = description.match(/[℗©]\s*((?:19|20)\d{2})/);
+    if (copyrightMatch) return copyrightMatch[1];
 
-    return new Date().getFullYear().toString();
+    // 3. Any 4-digit year in description (first occurrence)
+    const descYearMatch = description.match(/((?:19|20)\d{2})/);
+    if (descYearMatch) return descYearMatch[1];
+
+    // 4. Year in title (common for live recordings)
+    const titleYearFull = (videoInfo.title || '').match(/((?:19|20)\d{2})/);
+    if (titleYearFull) return titleYearFull[1];
+
+    return '';
   }
 
-  extractArtistFromDescription(description) {
-    const lines = description.split('\n').slice(0, 10); // Check first 10 lines
-    
-    for (const line of lines) {
-      const trimmed = line.trim();
-      
-      // Skip empty lines or lines that look like titles/headers
-      if (!trimmed || trimmed.length < 3 || trimmed.includes('http') || trimmed.includes('www')) {
-        continue;
-      }
-
-      // Look for artist patterns
-      if (trimmed.match(/^(artist|performed by|by)[:\s]+/i)) {
-        const artist = trimmed.replace(/^(artist|performed by|by)[:\s]+/i, '').trim();
-        return this.cleanArtistName(artist);
-      }
-
-      // Check if line looks like an artist name (not too long, no special chars)
-      if (trimmed.length < 50 && !trimmed.includes('©') && !trimmed.includes('℗')) {
-        const words = trimmed.split(' ');
-        if (words.length >= 1 && words.length <= 4) {
-          return this.cleanArtistName(trimmed);
+  // Scan description lines for patterns, return first clean match
+  _scanDescription(description, patterns) {
+    for (const pattern of patterns) {
+      const match = description.match(pattern);
+      if (match && match[1]) {
+        const value = this._cleanName(match[1]);
+        if (value.length > 1 && value.length < 100 && !value.includes('http')) {
+          return value;
         }
       }
     }
-
     return null;
   }
 
-  cleanArtistName(artist) {
-    return artist
+  _cleanName(text) {
+    return text
       .replace(/[,.\n\r"']+$/, '')
       .replace(/^\W+|\W+$/g, '')
       .trim();
   }
 
-  isGenericTitle(text) {
-    const generic = [
-      'official', 'music', 'video', 'audio', 'lyrics', 'full', 'hd', 'hq',
-      'live', 'concert', 'performance', 'session', 'acoustic', 'unplugged',
-      'remix', 'cover', 'version', 'remaster', 'extended', 'radio', 'edit'
+  _isClutter(text) {
+    const clutter = [
+      'official', 'music video', 'audio', 'lyrics', 'lyric video',
+      'full', 'hd', 'hq', '4k', 'remastered', 'remaster',
     ];
-    
-    const lower = text.toLowerCase();
-    return generic.some(term => lower.includes(term)) || text.length < 2;
+    const lower = text.toLowerCase().trim();
+    return clutter.some((c) => lower === c) || text.length < 2;
   }
 
-  isGenericUploader(uploader) {
-    const generic = [
-      'vevo', 'records', 'music', 'official', 'entertainment', 'media',
-      'productions', 'label', 'sounds', 'audio', 'tube', 'channel'
-    ];
-    
-    const lower = uploader.toLowerCase();
-    return generic.some(term => lower.includes(term));
-  }
-
-  // Clean up song title by removing common additions
   cleanTitle(title, artist) {
     let cleaned = title;
 
-    // Remove artist name from beginning if it's there
-    if (artist && artist !== 'Unknown Artist') {
-      const artistRegex = new RegExp(`^${artist.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*[-:]?\\s*`, 'i');
-      cleaned = cleaned.replace(artistRegex, '');
+    if (artist) {
+      const escaped = artist.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      cleaned = cleaned.replace(new RegExp(`^${escaped}\\s*[-–—:]\\s*`, 'i'), '');
     }
 
-    // Remove common suffixes
-    cleaned = cleaned.replace(/\s*\((official|music|audio|video|lyric|hd|hq).*?\)$/i, '');
-    cleaned = cleaned.replace(/\s*\[(official|music|audio|video|lyric|hd|hq).*?\]$/i, '');
-    
-    // Remove year from title
-    cleaned = cleaned.replace(/\s*\(?\d{4}\)?$/, '');
+    cleaned = cleaned.replace(/\s*\(?(official|music|audio|video|lyric|hd|hq).*?\)?$/i, '');
+    cleaned = cleaned.replace(/\s*\[.*?\]\s*$/i, '');
 
-    return cleaned.trim() || title; // Return original if cleaning removes everything
+    return cleaned.trim() || title;
   }
 }
